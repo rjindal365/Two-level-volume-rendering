@@ -24,7 +24,7 @@ GLuint g_winHeight = 400;
 GLint g_angle = 0;
 GLuint g_frameBuffer;
 // transfer function
-GLuint g_tffTexObj[4];
+GLuint g_tffTexObj;
 GLuint g_bfTexObj;
 GLuint g_texWidth;
 GLuint g_texHeight;
@@ -67,11 +67,7 @@ void init()
     g_texHeight = g_winHeight;
     initVBO();
     initShader();
-    g_tffTexObj[0] = initTFF1DTex("tff.dat");
-    g_tffTexObj[1] = initTFF1DTex("tex_r.raw");
-    g_tffTexObj[2] = initTFF1DTex("tex_g.raw");
-    g_tffTexObj[3] = initTFF1DTex("tex_b.raw");
-
+    g_tffTexObj = initTFF1DTex("tff.dat");
     g_bfTexObj = initFace2DTex(g_texWidth, g_texHeight);
     g_volTexObj = initVol3DTex("head256.raw", 256, 256, 225);
     // g_volTexObj = initVol3DTex("brain.raw", 512, 512, 216);
@@ -402,40 +398,26 @@ void rcSetUinforms()
 	     << endl;
     }
     GL_ERROR();
-
-    int i;
-    GLint transferFuncLoc;
-
-    char uni_name[][30] = {
-    	"TransferFunc[0]",
-    	"TransferFunc[1]",
-    	"TransferFunc[2]",
-    	"TransferFunc[3]"
-    };
-
-    for(i=0; i<4; i++) {
-	    transferFuncLoc = glGetUniformLocation(g_programHandle, uni_name[i]);
-	    if (transferFuncLoc >= 0)
-	    {
-		glActiveTexture(GL_TEXTURE0 + i);
-		glBindTexture(GL_TEXTURE_1D, g_tffTexObj[i]);
-		glUniform1i(transferFuncLoc, 0+i);
-	    }
-	    else
-	    {
-		cout << "TransferFunc"
-		     << "is not bind to the uniform"
-		     << endl;
-	    }
-	    GL_ERROR();    
-	}
-	i--;
+    GLint transferFuncLoc = glGetUniformLocation(g_programHandle, "TransferFunc");
+    if (transferFuncLoc >= 0)
+    {
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_1D, g_tffTexObj);
+	glUniform1i(transferFuncLoc, 0);
+    }
+    else
+    {
+	cout << "TransferFunc"
+	     << "is not bind to the uniform"
+	     << endl;
+    }
+    GL_ERROR();    
     GLint backFaceLoc = glGetUniformLocation(g_programHandle, "ExitPoints");
     if (backFaceLoc >= 0)
     {
-	glActiveTexture(GL_TEXTURE1 + i); // it was GL_TEXTURE1
+	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, g_bfTexObj);
-	glUniform1i(backFaceLoc, 1+i);
+	glUniform1i(backFaceLoc, 1);
     }
     else
     {
@@ -447,9 +429,9 @@ void rcSetUinforms()
     GLint volumeLoc = glGetUniformLocation(g_programHandle, "VolumeTex");
     if (volumeLoc >= 0)
     {
-	glActiveTexture(GL_TEXTURE2 +i);// it was GL_TEXTURE2
+	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_3D, g_volTexObj);
-	glUniform1i(volumeLoc, 2+i);
+	glUniform1i(volumeLoc, 2);
     }
     else
     {
