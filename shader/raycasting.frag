@@ -7,6 +7,7 @@ in vec4 ExitPointCoord;
 
 uniform sampler2D ExitPoints;
 uniform sampler3D VolumeTex;
+uniform sampler3D VolumeIdTex;
 uniform sampler1D TransferFunc[4];
 uniform float     StepSize;
 uniform vec2      ScreenSize;
@@ -35,6 +36,8 @@ void main()
     float alphaAcum = 0.0;                // The  dest alpha for blending
     /* 定义颜色查找的坐标 */
     float intensity;
+    float obj_id;
+
     float lengthAcum = 0.0;
     vec4 colorSample; // The src color 
     float alphaSample; // The src alpha
@@ -48,15 +51,14 @@ void main()
     	// 查找传输函数中映射后的值
     	// 依赖性纹理读取  
 
-
-            if (voxelCoord.x < 0.25) {
+        obj_id = texture(VolumeIdTex, voxelCoord).x;
+            
+            if (obj_id < 0.25) {
                 colorSample = texture(TransferFunc[3], intensity);
-            } else 
-            if (voxelCoord.x < 0.5) {
-                colorSample = texture(TransferFunc[1], intensity);
-            } else 
-            if (voxelCoord.x < 0.75) {
+            } else if (obj_id < 0.5) {
                 colorSample = texture(TransferFunc[2], intensity);
+            } else if (obj_id < 0.9) {
+                colorSample = texture(TransferFunc[1], intensity);
             } else {
                 colorSample = texture(TransferFunc[0], intensity);
             }

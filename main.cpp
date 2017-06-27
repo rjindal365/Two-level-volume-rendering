@@ -29,6 +29,7 @@ GLuint g_bfTexObj;
 GLuint g_texWidth;
 GLuint g_texHeight;
 GLuint g_volTexObj;
+GLuint g_volTexObjID;
 GLuint g_rcVertHandle;
 GLuint g_rcFragHandle;
 GLuint g_bfVertHandle;
@@ -60,6 +61,7 @@ void initFrameBuffer(GLuint, GLuint, GLuint);
 GLuint initTFF1DTex(const char* filename);
 GLuint initFace2DTex(GLuint texWidth, GLuint texHeight);
 GLuint initVol3DTex(const char* filename, GLuint width, GLuint height, GLuint depth);
+GLuint initVol3DTex2(const char* filename, GLuint width, GLuint height, GLuint depth);
 void render(GLenum cullFace);
 void init()
 {
@@ -73,8 +75,10 @@ void init()
     g_tffTexObj[3] = initTFF1DTex("tex_b.raw");
 
     g_bfTexObj = initFace2DTex(g_texWidth, g_texHeight);
-    g_volTexObj = initVol3DTex("head256.raw", 256, 256, 225);
+
     // g_volTexObj = initVol3DTex("brain.raw", 512, 512, 216);
+    g_volTexObj = initVol3DTex("head256.raw", 256, 256, 225);
+    	g_volTexObjID = initVol3DTex2("MyIDs.raw", 256, 256, 225);
     GL_ERROR();
     initFrameBuffer(g_bfTexObj, g_texWidth, g_texHeight);
     GL_ERROR();
@@ -299,6 +303,28 @@ GLuint initFace2DTex(GLuint bfTexWidth, GLuint bfTexHeight)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, bfTexWidth, bfTexHeight, 0, GL_RGBA, GL_FLOAT, NULL);
     return backFace2DTex;
 }
+
+GLuint initVol3DTex2(const char* filename, GLuint w, GLuint h, GLuint d)
+{
+	GLuint objId_VolTex;
+	glGenTextures(1, &objId_VolTex);
+    // bind 3D texture target
+    glBindTexture(GL_TEXTURE_3D, objId_VolTex);
+	    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);	
+	    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
+    // pixel transfer happens here from client to OpenGL server
+    glPixelStorei(GL_UNPACK_ALIGNMENT,1);
+    		w=h=d=2;
+    		unsigned char data[8] = {250,1,1,1,100,100,100,200};
+
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_INTENSITY, w, h, d, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,data);
+
+    cout << "ObjectId volume texture created" << endl;
+    return objId_VolTex;
+}
 // init 3D texture to store the volume data used fo ray casting
 GLuint initVol3DTex(const char* filename, GLuint w, GLuint h, GLuint d)
 {
@@ -385,19 +411,20 @@ void rcSetUinforms()
     }
     else
     {
-	cout << "ScreenSize"
+	cout << "ScreenSize "
 	     << "is not bind to the uniform"
 	     << endl;
     }
-    GLint stepSizeLoc = glGetUniformLocation(g_programHandle, "StepSize");
     GL_ERROR();
+
+    GLint stepSizeLoc = glGetUniformLocation(g_programHandle, "StepSize");
     if (stepSizeLoc >= 0)
     {
 	glUniform1f(stepSizeLoc, g_stepSize);
     }
     else
     {
-	cout << "StepSize"
+	cout << "StepSize "
 	     << "is not bind to the uniform"
 	     << endl;
     }
@@ -423,7 +450,7 @@ void rcSetUinforms()
 	    }
 	    else
 	    {
-		cout << "TransferFunc"
+		cout << "TransferFunc "
 		     << "is not bind to the uniform"
 		     << endl;
 	    }
@@ -439,7 +466,7 @@ void rcSetUinforms()
     }
     else
     {
-	cout << "ExitPoints"
+	cout << "ExitPoints "
 	     << "is not bind to the uniform"
 	     << endl;
     }
@@ -453,11 +480,28 @@ void rcSetUinforms()
     }
     else
     {
-	cout << "VolumeTex"
+	cout << "VolumeTex "
 	     << "is not bind to the uniform"
 	     << endl;
     }
-    
+
+
+    // following is added by Rohit-Jindal on 27-6-17
+    GL_ERROR();    
+    GLint volumeIdLoc = glGetUniformLocation(g_programHandle, "VolumeIdTex");
+    if (volumeIdLoc >= 0)
+    {
+	glActiveTexture(GL_TEXTURE3 +i);
+	glBindTexture(GL_TEXTURE_3D, g_volTexObjID);
+	glUniform1i(volumeIdLoc, 3+i);
+    }
+    else
+    {
+	cout << "VolumeIdTex "
+	     << "is not bind to the uniform"
+	     << endl;
+    }
+    GL_ERROR();
 }
 // init the shader object and shader program
 void initShader()
