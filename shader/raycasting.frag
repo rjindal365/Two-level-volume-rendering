@@ -36,7 +36,9 @@ void main()
     float alphaAcum = 0.0;                // The  dest alpha for blending
     /* 定义颜色查找的坐标 */
     float intensity;
-    float obj_id;
+    
+    float obj_id_f;
+    uint obj_id;
 
     float lengthAcum = 0.0;
     vec4 colorSample; // The src color 
@@ -51,19 +53,21 @@ void main()
     	// 查找传输函数中映射后的值
     	// 依赖性纹理读取  
 
-        obj_id = texture(VolumeIdTex, voxelCoord).x;
+        obj_id_f = texture(VolumeIdTex, voxelCoord);
+        obj_id = uint(0.1 + (obj_id_f * 255));
             
-            if (obj_id < 0.25) {
+            /*if (obj_id == 1) {
                 colorSample = texture(TransferFunc[3], intensity);
-            } else if (obj_id < 0.5) {
+            } else if (obj_id == 100) {
                 colorSample = texture(TransferFunc[2], intensity);
-            } else if (obj_id < 0.9) {
+            } else if (obj_id == 255) {
                 colorSample = texture(TransferFunc[1], intensity);
             } else {
                 colorSample = texture(TransferFunc[0], intensity);
-            }
+            }*/
 
-    	   //colorSample = texture(TransferFunc, intensity);
+           //colorSample = texture(TransferFunc, intensity);
+    	   colorSample = texture(TransferFunc[obj_id], intensity);
     	
 
         // modulate the value of colorSample.a
