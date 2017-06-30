@@ -411,7 +411,7 @@ void rcSetUinforms()
     {
 	glUniform2f(screenSizeLoc, (float)g_winWidth, (float)g_winHeight);
     }
-    else
+    else if(0)
     {
 	cout << "ScreenSize "
 	     << "is not bind to the uniform"
